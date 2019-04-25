@@ -58,7 +58,7 @@
                                     <div class="small-box bg-aqua">
                                         <div class="inner">
                                             <h3>{{ $shop->totalSales() }}</h3>
-                                            <p>Total Sales</p>
+                                            <p>Total Stocks</p>
                                         </div>
                                         <div class="icon">
                                             <i class="ion ion-bag"></i>
@@ -69,7 +69,7 @@
 
 
                                 <div class="clearfix"></div>
-                                <h3>Sales graph for {{ date('Y') }}</h3>
+                                <h3>Stocks graph for {{ date('Y') }}</h3>
 
                                 <div class="chart">
                                     <canvas id="lineChart" style="height:400px;"></canvas>
