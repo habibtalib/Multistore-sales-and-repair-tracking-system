@@ -42,7 +42,7 @@
 
 
 
-            <li class="treeview {{ Request::is('administrator/shop/sales*')? 'active' :''  }}">
+            {{-- <li class="treeview {{ Request::is('administrator/shop/sales*')? 'active' :''  }}">
               <a href="#">
                 <i class="fa fa-sellsy"></i>
                 <span>Sales</span>
@@ -54,12 +54,12 @@
                 </li>
                 <li class="{{ Request::is('administrator/shop/sales/create')? 'active' :''  }}"><a href="{{ route('admin_new_sales') }}"><i class="fa fa-plus-square-o"></i>New Sales </a></li>
               </ul>
-            </li>
+            </li> --}}
 
 
 
 
-              <li class="treeview {{ Request::is('admin/repair-product*')? 'active' :''  }}">
+              {{-- <li class="treeview {{ Request::is('admin/repair-product*')? 'active' :''  }}">
                   <a href="#">
                       <i class="fa fa-wrench"></i>
                       <span>Repair Product</span>
@@ -77,7 +77,7 @@
 
                       <li class="{{ Request::is('admin/repair-product/create')? 'active' :''  }}"><a href="{{ route('new_repair_product') }}"><i class="fa fa-plus-square-o"></i>Add new </a></li>
                   </ul>
-              </li>
+              </li> --}}
 
 
 
@@ -136,7 +136,7 @@
               </ul>
             </li>
 
-
+{{-- 
             <li class="treeview {{ Request::is('administrator/messages*')? 'active' :''  }}">
               <a href="#">
                 <i class="fa fa-envelope-o"></i>
@@ -148,7 +148,7 @@
                 <li class="{{ Request::is('administrator/messages/sent')? 'active' :''  }}"><a href="{{ route('admin_sent_message') }}"><i class="fa fa-send-o"></i> Sent</a></li>
                 <li class="{{ Request::is('administrator/messages/compose')? 'active' :''  }}"><a href="{{ route('admin_message_compose') }}"><i class="fa fa-pencil"></i> Compose </a></li>
               </ul>
-            </li>
+            </li> --}}
 
               <li class="treeview {{ Request::is('administrator/account*')? 'active' :''  }}">
                   <a href="#">
