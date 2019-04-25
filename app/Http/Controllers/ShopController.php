@@ -29,7 +29,7 @@ class ShopController extends Controller
     public function index()
     {
         $pageTitle = 'Shop Index';
-        //$shops = Shop::all();
+        $shops = Shop::all();
 
         return view('admin.shops', compact('pageTitle', 'shops'));
     }
@@ -638,7 +638,6 @@ class ShopController extends Controller
             ->removeColumn('description')
             ->removeColumn('updated_at')
             ->removeColumn('slug')
-            ->removeColumn('name')
             ->removeColumn('id')
             ->removeColumn('product')
             ->removeColumn('shop')
