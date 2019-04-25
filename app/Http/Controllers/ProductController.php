@@ -5,12 +5,10 @@ namespace App\Http\Controllers;
 use App\Activity;
 use App\Brand;
 use App\Category;
+use App\Http\Controllers\Controller;
 use App\Product;
 use App\Product_attribute;
 use Illuminate\Http\Request;
-
-use App\Http\Requests;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use yajra\Datatables\Datatables;
 
@@ -29,26 +27,29 @@ class ProductController extends Controller
 
     public function indexData()
     {
-        $products = Product::orderBy('id', 'desc')->select('id', 'product_name', 'product_model', 'brand_id','category_id', 'unite_price', 'created_at')->with('category', 'brand');
+        $products = Product::with('category', 'brand')->get();
         return Datatables::of($products)
-            ->editColumn('brand_id', function($product){
+            ->editColumn('brand_id', function ($product) {
                 return $product->brand->brand_name;
             })
-            ->editColumn('category_id', function($product){
+            ->editColumn('category_id', function ($product) {
                 return $product->category->category_name;
             })
-            ->editColumn('created_at', function($product){
-                return '<span title="'.$product->created_at->format('F d, Y').'" data-toggle="tooltip" data-placement="top"> '.$product->created_at->diffForHumans().' </span>';
+            ->editColumn('created_at', function ($product) {
+                return '<span title="' . $product->created_at->format('F d, Y') . '" data-toggle="tooltip" data-placement="top"> ' . $product->created_at->diffForHumans() . ' </span>';
             })
-            ->addColumn('stock', function($product){
+            ->addColumn('stock', function ($product) {
                 return $product->stock_available();
             })
-            ->addColumn('actions', function($product){
-                $button = '<a href="'.route('view_product', $product->id).'" class="btn btn-success" title="View" data-toggle="tooltip" data-placement="top"><i class="fa fa-eye"></i> </a>';
-                $button .= '<a href="'.route('edit_product', $product->id).'" class="btn btn-info" title="Edit" data-toggle="tooltip" data-placement="top"><i class="fa fa-pencil"></i> </a>';
-                $button .= '<a href="javascript:;" class="btn btn-danger deleteBrands" title="Delete" data-toggle="tooltip" data-placement="top" data-id="'.$product->id.'"><i class="fa fa-trash-o"></i> </a>';
+            ->addColumn('actions', function ($product) {
+                $button = '<a href="' . route('view_product', $product->id) . '" class="btn btn-success" title="View" data-toggle="tooltip" data-placement="top"><i class="fa fa-eye"></i> </a>';
+                $button .= '<a href="' . route('edit_product', $product->id) . '" class="btn btn-info" title="Edit" data-toggle="tooltip" data-placement="top"><i class="fa fa-pencil"></i> </a>';
+                $button .= '<a href="javascript:;" class="btn btn-danger deleteBrands" title="Delete" data-toggle="tooltip" data-placement="top" data-id="' . $product->id . '"><i class="fa fa-trash-o"></i> </a>';
                 return $button;
             })
+            ->removeColumn('user_id')
+            ->removeColumn('description')
+            ->removeColumn('updated_at')
             ->removeColumn('id')
             ->removeColumn('brand')
             ->removeColumn('category')
@@ -63,15 +64,15 @@ class ProductController extends Controller
 
     public function indexShopData()
     {
-        $products = Product::orderBy('id', 'desc')->select('id', 'product_name', 'product_model', 'brand_id','category_id', 'unite_price')->with('category', 'brand');
+        $products = Product::orderBy('id', 'desc')->select('id', 'product_name', 'product_model', 'brand_id', 'category_id', 'unite_price')->with('category', 'brand');
         return Datatables::of($products)
-            ->editColumn('brand_id', function($product){
+            ->editColumn('brand_id', function ($product) {
                 return $product->brand->brand_name;
             })
-            ->editColumn('category_id', function($product){
+            ->editColumn('category_id', function ($product) {
                 return $product->category->category_name;
             })
-            ->addColumn('stock', function($product){
+            ->addColumn('stock', function ($product) {
                 return $product->stock_available();
             })
             ->removeColumn('id')
@@ -102,10 +103,10 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'category'  => 'required',
-            'brand'  => 'required',
-            'product_name'  => 'required',
-            'unite_price'  => 'required',
+            'category' => 'required',
+            'brand' => 'required',
+            'product_name' => 'required',
+            'unite_price' => 'required',
         ];
 
         //Dynamic Product Attribute Save into session
@@ -122,45 +123,39 @@ class ProductController extends Controller
 
         $user = Auth::user();
 
-
-
-        $category       = $request->input('category');
-        $brand          = $request->input('brand');
-        $product_name   = $request->input('product_name');
-        $unite_price    = $request->input('unite_price');
-        $product_model  = $request->input('product_model');
-        $description    = $request->input('description');
+        $category = $request->input('category');
+        $brand = $request->input('brand');
+        $product_name = $request->input('product_name');
+        $unite_price = $request->input('unite_price');
+        $product_model = $request->input('product_model');
+        $description = $request->input('description');
 
         $data = [
-            'user_id'       => $user->id,
-            'category_id'   => $category,
-            'brand_id'      => $brand,
-            'product_name'  => $product_name,
-            'unite_price'   => $unite_price,
+            'user_id' => $user->id,
+            'category_id' => $category,
+            'brand_id' => $brand,
+            'product_name' => $product_name,
+            'unite_price' => $unite_price,
             'product_model' => $product_model,
-            'description'   => $description,
+            'description' => $description,
         ];
 
         $create = Product::create($data);
-        if($create)
-        {
+        if ($create) {
             //Now Additional Save Attribute
             $count_attribute_names = count($attribute_names);
             $product_attributes = [];
-            for($i = 0; $i < $count_attribute_names; $i++)
-            {
+            for ($i = 0; $i < $count_attribute_names; $i++) {
                 $attribute_name = trim($attribute_names[$i]);
-                if($attribute_name != '')
-                {
+                if ($attribute_name != '') {
                     $attributeData = [
-                        'product_id'    => $create->id,
-                        'attribute_name'=> $attribute_name,
-                        'attribute_value'=> $attribute_values[$i]
+                        'product_id' => $create->id,
+                        'attribute_name' => $attribute_name,
+                        'attribute_value' => $attribute_values[$i],
                     ];
                     $createAttribute = Product_attribute::create($attributeData);
-                    if($createAttribute)
-                    {
-                        $createAttribute -> c_order = $createAttribute->id;
+                    if ($createAttribute) {
+                        $createAttribute->c_order = $createAttribute->id;
                         $createAttribute->save();
                     }
                 }
@@ -168,14 +163,13 @@ class ProductController extends Controller
             $request->session()->forget('old_product_attribute');
 
             //Add Activity
-            Activity::create(['user_id' => $user->id, 'activity' => 'You have added '.$product_name. '  product']);
+            Activity::create(['user_id' => $user->id, 'activity' => 'You have added ' . $product_name . '  product']);
 
             return redirect()->back()->with('success', 'Product create success');
         }
         return redirect()->back()->with('error', 'Something went wrong, please try again');
 
     }
-
 
     public function addProductAttribute()
     {
@@ -188,8 +182,6 @@ class ProductController extends Controller
         Product_attribute::destroy($attrID);
         return ['status' => 1];
     }
-
-
 
     /**
      * Display the specified resource.
@@ -231,10 +223,10 @@ class ProductController extends Controller
     {
 
         $rules = [
-            'category'  => 'required',
-            'brand'  => 'required',
-            'product_name'  => 'required',
-            'unite_price'  => 'required',
+            'category' => 'required',
+            'brand' => 'required',
+            'product_name' => 'required',
+            'unite_price' => 'required',
         ];
 
         //Dynamic Product Attribute Save into session
@@ -255,62 +247,54 @@ class ProductController extends Controller
 
         $user = Auth::user();
 
-
-
-        $category       = $request->input('category');
-        $brand          = $request->input('brand');
-        $product_name   = $request->input('product_name');
-        $unite_price    = $request->input('unite_price');
-        $product_model  = $request->input('product_model');
-        $description    = $request->input('description');
+        $category = $request->input('category');
+        $brand = $request->input('brand');
+        $product_name = $request->input('product_name');
+        $unite_price = $request->input('unite_price');
+        $product_model = $request->input('product_model');
+        $description = $request->input('description');
 
         $data = [
-            'user_id'       => $user->id,
-            'category_id'   => $category,
-            'brand_id'      => $brand,
-            'product_name'  => $product_name,
-            'unite_price'   => $unite_price,
+            'user_id' => $user->id,
+            'category_id' => $category,
+            'brand_id' => $brand,
+            'product_name' => $product_name,
+            'unite_price' => $unite_price,
             'product_model' => $product_model,
-            'description'   => $description,
+            'description' => $description,
         ];
 
         $create = Product::where('id', $id)->update($data);
-        if($create)
-        {
+        if ($create) {
             //Now Additional Save Attribute
             $count_attribute_names = count($attribute_names);
 
             //First update previous attributes belongs with this product
-            if(count($attribute_name_edit) > 0)
-            {
-                for($i = 0; $i < count($attribute_name_edit); $i++)
-                {
+            if (count($attribute_name_edit) > 0) {
+                for ($i = 0; $i < count($attribute_name_edit); $i++) {
                     $attributeData = [
-                        'attribute_name'    => $attribute_name_edit[$i],
-                        'attribute_value'   => $attribute_values_edit[$i],
-                        'c_order'           => $attr_ids[$i]
+                        'attribute_name' => $attribute_name_edit[$i],
+                        'attribute_value' => $attribute_values_edit[$i],
+                        'c_order' => $attr_ids[$i],
                     ];
                     Product_attribute::where('id', $attr_ids[$i])->update($attributeData);
                 }
             }
 
             //Save new attributes
-            if($count_attribute_names > 0){
+            if ($count_attribute_names > 0) {
                 $product_attributes = [];
-                for($i = 0; $i < $count_attribute_names; $i++)
-                {
+                for ($i = 0; $i < $count_attribute_names; $i++) {
                     $attribute_name = trim($attribute_names[$i]);
-                    if($attribute_name != '')
-                    {
+                    if ($attribute_name != '') {
                         $attributeData = [
-                            'product_id'    => $id,
-                            'attribute_name'=> $attribute_name,
-                            'attribute_value'=> $attribute_values[$i]
+                            'product_id' => $id,
+                            'attribute_name' => $attribute_name,
+                            'attribute_value' => $attribute_values[$i],
                         ];
                         $createAttribute = Product_attribute::create($attributeData);
-                        if($createAttribute)
-                        {
-                            $createAttribute -> c_order = $createAttribute->id;
+                        if ($createAttribute) {
+                            $createAttribute->c_order = $createAttribute->id;
                             $createAttribute->save();
                         }
                     }
@@ -319,7 +303,7 @@ class ProductController extends Controller
             }
 
             //Add Activity
-            Activity::create(['user_id' => $user->id, 'activity' => 'You have updated '.$product_name. '  product']);
+            Activity::create(['user_id' => $user->id, 'activity' => 'You have updated ' . $product_name . '  product']);
 
             return redirect()->back()->with('success', 'Product update success');
         }

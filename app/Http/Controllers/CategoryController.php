@@ -4,10 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Activity;
 use App\Category;
-use Illuminate\Http\Request;
-
-use App\Http\Requests;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use yajra\Datatables\Datatables;
 
@@ -24,20 +22,21 @@ class CategoryController extends Controller
         return view('admin.category_index', compact('pageTitle'));
     }
 
-
     public function indexData()
     {
-        $categories = Category::orderBy('id', 'desc')->select('id','category_name', 'created_at');
+        $categories = Category::all();
         return Datatables::of($categories)
-            ->editColumn('created_at', function($category){
-                return '<span title="'.$category->created_at->format('F d, Y').'" data-toggle="tooltip" data-placement="top"> '.$category->created_at->diffForHumans().' </span>';
+            ->editColumn('created_at', function ($category) {
+                return '<span title="' . $category->created_at->format('F d, Y') . '" data-toggle="tooltip" data-placement="top"> ' . $category->created_at->diffForHumans() . ' </span>';
             })
-            ->addColumn('actions', function($category){
-                $button = '<a href="'.route('edit_category', $category->id).'" class="btn btn-info" title="Edit" data-toggle="tooltip" data-placement="top"><i class="fa fa-pencil"></i> </a>';
-                $button .= '<a href="javascript:;" class="btn btn-danger deleteCategory" title="Delete" data-toggle="tooltip" data-placement="top" data-id="'.$category->id.'"><i class="fa fa-trash-o"></i> </a>';
+            ->addColumn('actions', function ($category) {
+                $button = '<a href="' . route('edit_category', $category->id) . '" class="btn btn-info" title="Edit" data-toggle="tooltip" data-placement="top"><i class="fa fa-pencil"></i> </a>';
+                $button .= '<a href="javascript:;" class="btn btn-danger deleteCategory" title="Delete" data-toggle="tooltip" data-placement="top" data-id="' . $category->id . '"><i class="fa fa-trash-o"></i> </a>';
                 return $button;
             })
             ->removeColumn('id')
+            ->removeColumn('user_id')
+            ->removeColumn('updated_at')
             ->make();
     }
 
@@ -60,9 +59,9 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        $user= Auth::user();
+        $user = Auth::user();
         $rules = [
-            'category_name' => 'required'
+            'category_name' => 'required',
         ];
         $this->validate($request, $rules);
         $category_name = $request->input('category_name');
@@ -72,9 +71,8 @@ class CategoryController extends Controller
         ];
 
         $create = Category::create($data);
-        if($create)
-        {
-            Activity::create(['user_id' => $user->id, 'activity' => 'You have added '.$category_name. '  category']);
+        if ($create) {
+            Activity::create(['user_id' => $user->id, 'activity' => 'You have added ' . $category_name . '  category']);
 
             return redirect()->back()->with('success', 'Category create success');
         }
@@ -116,7 +114,7 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $rules = [
-            'category_name' => 'required'
+            'category_name' => 'required',
         ];
         $this->validate($request, $rules);
 
@@ -128,9 +126,8 @@ class CategoryController extends Controller
         $category->category_name = $category_name;
         $update = $category->save();
 
-        if($update)
-        {
-            Activity::create(['user_id' => $user->id, 'activity' => 'You have added '.$category->category_name. '  category']);
+        if ($update) {
+            Activity::create(['user_id' => $user->id, 'activity' => 'You have added ' . $category->category_name . '  category']);
 
             return redirect()->back()->with('success', 'Category update success');
         }
@@ -153,12 +150,11 @@ class CategoryController extends Controller
         $category_name = $category->category_name;
         $destroy = $category->delete();
 
-        if($destroy)
-        {
+        if ($destroy) {
             $response['status'] = 1;
-            $response['msg']    = 'Success';
+            $response['msg'] = 'Success';
         }
-        Activity::create(['user_id' => $user->id, 'activity' => 'You have deleted '.$category_name. '  category']);
+        Activity::create(['user_id' => $user->id, 'activity' => 'You have deleted ' . $category_name . '  category']);
         return $response;
     }
 }
