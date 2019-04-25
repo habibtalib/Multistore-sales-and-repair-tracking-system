@@ -584,7 +584,7 @@ class ShopController extends Controller
 
     public function shopProductsData($shop_id)
     {
-        $products = Product::orderBy('id', 'desc')->select('id', 'product_name', 'product_model', 'brand_id', 'category_id', 'unite_price', 'created_at')->with('category', 'brand');
+        $products = Product::with('category', 'brand')->get();
 
         return Datatables::of($products)
             ->editColumn('brand_id', function ($product) {
@@ -599,6 +599,9 @@ class ShopController extends Controller
             ->addColumn('stock', function ($product) use ($shop_id) {
                 return $product->stock_available($shop_id);
             })
+            ->removeColumn('user_id')
+            ->removeColumn('description')
+            ->removeColumn('updated_at')
             ->removeColumn('id')
             ->removeColumn('brand')
             ->removeColumn('category')
@@ -615,7 +618,7 @@ class ShopController extends Controller
     public function shopStocksData($shop_id)
     {
 
-        $stocks = Stock::orderBy('id', 'desc')->select('id', 'product_id', 'shop_id', 'total_product', 'unite_price', 'created_at')->where('shop_id', $shop_id)->with('product', 'shop');
+        $stocks = Stock::where('shop_id', $shop_id)->with('product', 'shop')->get();
 
         return Datatables::of($stocks)
 
@@ -631,7 +634,11 @@ class ShopController extends Controller
             ->editColumn('created_at', function ($stock) {
                 return '<span title="' . $stock->created_at->format('F d, Y') . '" data-toggle="tooltip" data-placement="top"> ' . $stock->created_at->diffForHumans() . ' </span>';
             })
-
+            ->removeColumn('user_id')
+            ->removeColumn('description')
+            ->removeColumn('updated_at')
+            ->removeColumn('slug')
+            ->removeColumn('name')
             ->removeColumn('id')
             ->removeColumn('product')
             ->removeColumn('shop')
